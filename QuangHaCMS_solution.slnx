@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="CMS.Backend/CMS.Backend.csproj" Id="c4c5931f-6638-403f-a57f-0c257fd1fe91" />
-  <Project Path="CMS.Data/CMS.Data.csproj" Id="bf87508a-dafe-48c0-8ec0-ccdf12c3b855" />
+  <Project Path="CMS.DataNew/CMS.Data.csproj" Id="e5bd16f3-be6e-4867-9a93-3327b4b9dc52" />
   <Project Path="cms.frontend/" Type="Website" DisplayName="cms.frontend">
     <BuildType Project="Debug" />
     <Properties Name="WebsiteProperties">
