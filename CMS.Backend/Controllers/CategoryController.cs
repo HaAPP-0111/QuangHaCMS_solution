@@ -3,9 +3,7 @@
  * MSSV: 2123110066
  * Version: 2.0 (Hoàn chỉnh chức năng Xem và Thêm danh mục)
  */
-//Họ Tên : Bùi Quang Hào
-//MSSV : 2123110043
-//version : 2.0 (Bổ sung quy trình 2 bước: Nhập và Lưu dữ liệu vào SQL Server)
+
 
 using CMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
