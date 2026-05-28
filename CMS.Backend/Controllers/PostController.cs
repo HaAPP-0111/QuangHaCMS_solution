@@ -1,12 +1,12 @@
 ﻿/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
- * Version: 4.0 (Hoàn chỉnh đầy đủ chức năng Xem, Lọc, Thêm có Upload ảnh và Xóa bài viết)
+ * Version: 4.0 (Hoàn chỉnh đầy đủ chức năng Xem, Lọc, Thêm có Upload ảnh, Xóa bài viết và Tích hợp bộ lọc bảo mật)
  */
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering; // QUAN TRỌNG: Phải có để dùng được SelectList
 using Microsoft.EntityFrameworkCore;    // QUAN TRỌNG: Phải có để dùng được lệnh .Include()
+using Microsoft.AspNetCore.Authorization; // QUAN TRỌNG: Để sử dụng thuộc tính [Authorize]
 using CMS.Data.Entities;
 using CMS.Data;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +16,8 @@ using System.Linq;
 
 namespace CMS.Backend.Controllers
 {
+    // Bắt buộc phải đăng nhập mới được vào xem dữ liệu và thao tác bài viết
+    [Authorize]
     public class PostController : Controller
     {
         // Khai báo đối tượng kết nối Database
@@ -135,7 +137,71 @@ namespace CMS.Backend.Controllers
         }
 
         // =========================================================================
-        // 4. CHỨC NĂNG XÓA BÀI VIẾT (DELETE) - POST
+        // 4. CHỨC NĂNG SỬA BÀI VIẾT (EDIT) - GET (Hiển thị form kèm dữ liệu cũ)
+        // =========================================================================
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var post = _context.Posts.Find(id);
+            if (post == null) return NotFound();
+
+            // Chuẩn bị lại danh sách danh mục để người dùng có thể đổi chuyên mục
+            ViewBag.CategoryList = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
+            return View(post);
+        }
+
+        // =========================================================================
+        // 4. CHỨC NĂNG SỬA BÀI VIẾT (EDIT) - POST (Thực hiện cập nhật)
+        // =========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Post model, IFormFile uploadImage)
+        {
+            try
+            {
+                // Bước 1: Kiểm tra xem người dùng có chọn file ảnh mới không
+                if (uploadImage != null && uploadImage.Length > 0)
+                {
+                    // Thực hiện quy trình upload giống như trang Create
+                    string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(uploadImage.FileName);
+                    string filePath = Path.Combine(folder, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        uploadImage.CopyTo(stream);
+                    }
+
+                    // Cập nhật đường dẫn ảnh mới vào model
+                    model.ImageUrl = "/uploads/" + fileName;
+                }
+                else
+                {
+                    // Bước quan trọng: Nếu không upload ảnh mới, chúng ta phải giữ lại ảnh cũ
+                    // Chúng ta cần lấy lại giá trị ImageUrl từ Database để tránh bị ghi đè thành rỗng
+                    var oldPost = _context.Posts.AsNoTracking().FirstOrDefault(p => p.Id == model.Id);
+                    if (oldPost != null && string.IsNullOrEmpty(model.ImageUrl))
+                    {
+                        model.ImageUrl = oldPost.ImageUrl;
+                    }
+                }
+
+                _context.Posts.Update(model);
+                _context.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Lỗi cập nhật: " + ex.Message);
+                ViewBag.CategoryList = new SelectList(_context.Categories, "Id", "Name", model.CategoryId);
+                return View(model);
+            }
+        }
+
+        // =========================================================================
+        // 5. CHỨC NĂNG XÓA BÀI VIẾT (DELETE) - POST
         // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -164,56 +230,5 @@ namespace CMS.Backend.Controllers
                 return RedirectToAction("Index");
             }
         }
-
-        // GET: Hiển thị form kèm dữ liệu cũ
-        [HttpGet]
-        public IActionResult Edit(int id)
-        {
-            var post = _context.Posts.Find(id);
-            if (post == null) return NotFound();
-
-            // Chuẩn bị lại danh sách danh mục để người dùng có thể đổi chuyên mục
-            ViewBag.CategoryList = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
-            return View(post);
-        }
-
-        // POST: Thực hiện cập nhật
-        [HttpPost]
-        public IActionResult Edit(Post model, IFormFile uploadImage)
-        {
-            // Bước 1: Kiểm tra xem người dùng có chọn file ảnh mới không
-            if (uploadImage != null && uploadImage.Length > 0)
-            {
-                // Thực hiện quy trình upload giống như trang Create
-                string folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-
-                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(uploadImage.FileName);
-                string filePath = Path.Combine(folder, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    uploadImage.CopyTo(stream);
-                }
-
-                // Cập nhật đường dẫn ảnh mới vào model
-                model.ImageUrl = "/uploads/" + fileName;
-            }
-            else
-            {
-                // Bước quan trọng: Nếu không upload ảnh mới, chúng ta phải giữ lại ảnh cũ
-                // Chúng ta cần lấy lại giá trị ImageUrl từ Database để tránh bị ghi đè thành rỗng
-                var oldPost = _context.Posts.AsNoTracking().FirstOrDefault(p => p.Id == model.Id);
-                if (oldPost != null && string.IsNullOrEmpty(model.ImageUrl))
-                {
-                    model.ImageUrl = oldPost.ImageUrl;
-                }
-            }
-            _context.Posts.Update(model);
-            _context.SaveChanges();
-            return RedirectToAction("Index");
-        }
-
-
     }
 }

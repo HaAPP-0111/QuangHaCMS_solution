@@ -1,19 +1,18 @@
 ﻿/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
- * Version: 2.0 (Hoàn chỉnh chức năng Xem và Thêm danh mục)
+ * Version: 2.0 (Hoàn chỉnh chức năng Xem, Thêm, Sửa, Xóa danh mục và Tích hợp bộ lọc bảo mật)
  */
-//Họ Tên : Bùi Quang Hào
-//MSSV : 2123110043
-//version : 2.0 (Bổ sung quy trình 2 bước: Nhập và Lưu dữ liệu vào SQL Server)
-
 using CMS.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization; // QUAN TRỌNG: Để sử dụng thuộc tính [Authorize]
 using CMS.Data;
 using System.Linq;
 
 namespace CMS.Backend.Controllers
 {
+    // Bắt buộc phải đăng nhập mới được vào xem danh sách và thao tác chuyên mục
+    [Authorize]
     public class CategoryController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,7 +23,9 @@ namespace CMS.Backend.Controllers
             _context = context;
         }
 
-        // 1. Hàm Index: Hiển thị danh sách danh mục gốc của bạn
+        // =========================================================================
+        // 1. CHỨC NĂNG HIỂN THỊ DANH SÁCH DANH MỤC (INDEX)
+        // =========================================================================
         public IActionResult Index()
         {
             // Lấy dữ liệu THẬT từ bảng Categories trong SQL
@@ -33,7 +34,7 @@ namespace CMS.Backend.Controllers
         }
 
         // =========================================================================
-        // // 1. Hàm GET: Dùng để hiển thị giao diện Form cho bạn nhập liệu
+        // 2. CHỨC NĂNG THÊM DANH MỤC - BƯỚC 1: GET (Hiển thị Form nhập liệu)
         // =========================================================================
         [HttpGet]
         public IActionResult Create()
@@ -42,7 +43,7 @@ namespace CMS.Backend.Controllers
         }
 
         // =========================================================================
-        // // 2. Hàm POST: Đã thêm bẫy lỗi try-catch để ép hiển thị lỗi SQL ra màn hình
+        // 2. CHỨC NĂNG THÊM DANH MỤC - BƯỚC 2: POST (Xử lý lưu dữ liệu)
         // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -60,12 +61,13 @@ namespace CMS.Backend.Controllers
             catch (System.Exception ex)
             {
                 // Nếu SQL bị kẹt (Lỗi Identity, lỗi kết nối, v.v.), dòng này sẽ gửi lỗi ra giao diện
-                ModelState.AddModelError("", "Lỗi hệ thống database: " + ex.InnerException?.Message ?? ex.Message);
+                ModelState.AddModelError("", "Lỗi hệ thống database: " + (ex.InnerException?.Message ?? ex.Message));
                 return View(model);
             }
         }
+
         // =========================================================================
-        // // 3. CHỨC NĂNG SỬA (EDIT) - BƯỚC 1: GET - Lấy dữ liệu cũ hiển thị lên Form
+        // 3. CHỨC NĂNG SỬA (EDIT) - BƯỚC 1: GET - Lấy dữ liệu cũ hiển thị lên Form
         // =========================================================================
         [HttpGet]
         public IActionResult Edit(int id)
@@ -81,7 +83,7 @@ namespace CMS.Backend.Controllers
         }
 
         // =========================================================================
-        // // 3. CHỨC NĂNG SỬA (EDIT) - BƯỚC 2: POST - Đón dữ liệu mới và cập nhật SQL
+        // 3. CHỨC NĂNG SỬA (EDIT) - BƯỚC 2: POST - Đón dữ liệu mới và cập nhật SQL
         // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -103,7 +105,7 @@ namespace CMS.Backend.Controllers
         }
 
         // =========================================================================
-        // // 4. CHỨC NĂNG XÓA (DELETE) - POST - Thực hiện xóa thẳng dữ liệu bằng ID
+        // 4. CHỨC NĂNG XÓA (DELETE) - POST - Thực hiện xóa thẳng dữ liệu bằng ID
         // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]

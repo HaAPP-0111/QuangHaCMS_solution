@@ -1,11 +1,12 @@
 ﻿/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
- * Version: 3.0 (Hoàn chỉnh toàn diện CRUD: Xem, Thêm, Sửa mật khẩu bảo mật, và Xóa thành viên)
+ * Version: 3.0 (Hoàn chỉnh toàn diện CRUD và tích hợp bộ lọc phân quyền bảo mật cấp cao)
  */
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // QUAN TRỌNG: Cần để sử dụng .AsNoTracking()
+using Microsoft.AspNetCore.Authorization; // QUAN TRỌNG: Để sử dụng thuộc tính [Authorize]
 using CMS.Data.Entities;             // Sử dụng thực thể User
 using CMS.Data;                      // Sử dụng ApplicationDbContext
 using System;
@@ -13,6 +14,8 @@ using System.Linq;
 
 namespace CMS.Backend.Controllers
 {
+    // Chỉ tài khoản có chức vụ (Role) là Admin mới được phép truy cập vào quản lý thành viên
+    [Authorize(Roles = "Admin")]
     public class UserController : Controller
     {
         // Khai báo biến làm cầu nối xuống Cơ sở dữ liệu
@@ -108,7 +111,7 @@ namespace CMS.Backend.Controllers
                 // 2. Xử lý logic mật khẩu: Nếu người dùng nhập mới thì lấy cái mới, nếu để trống thì giữ nguyên mật khẩu cũ
                 if (!string.IsNullOrEmpty(NewPassword))
                 {
-                    model.PasswordHash = NewPassword; // Sau này bạn có thể chèn hàm BCrypt hoặc SHA256 mã hóa tại đây
+                    model.PasswordHash = NewPassword; // Sau này bạn có thể chèn hàm mã hóa tại đây
                 }
                 else
                 {
@@ -138,7 +141,6 @@ namespace CMS.Backend.Controllers
 
         // =========================================================================
         // 4. CHỨC NĂNG XÓA THÀNH VIÊN (DELETE) - POST 
-        // (Để khớp hoàn toàn với nút Xóa bảo mật ở trang Index.cshtml bạn vừa làm)
         // =========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
