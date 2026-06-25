@@ -6,8 +6,8 @@ const categoryProductService = {
      * Endpoint này kết nối tới CategoryProductController trong ASP.NET Core
      */
     getAllCategoryProducts: () => {
-        // Đường dẫn phải khớp chính xác với [Route("api/[controller]")] của Backend
-        const url = '/categoriesproducts';
+        // Đường dẫn đã xác nhận đúng theo Swagger thực tế: /api/CategoryProducts
+        const url = '/CategoryProducts';
         return axiosClient.get(url);
     }
 };

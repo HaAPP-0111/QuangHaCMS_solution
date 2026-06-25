@@ -19,7 +19,7 @@ axiosClient.interceptors.response.use(
         return response.data;
     },
     (error) => {
-        // Xử lý lỗi tập trung tại đây (Ví dụ: Server sập, lỗi 404, lỗi 500)
+        // Xử lý lỗi tập trung tại đây (Ví dụ: Server sập, lỗi 404, lỗi 500)pm start
         console.error('Lỗi kết nối API:', error.message);
 
         // Bạn có thể thêm xử lý logic cho các mã lỗi cụ thể ở đây

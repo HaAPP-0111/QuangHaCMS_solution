@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -94,7 +94,7 @@
             /* Main Content Layout Adjustments */
             .main-content {
                 margin-left: 16.666667%; /* Compares to col-md-2 width */
-                padding: 40px;
+                padding: 0;
                 min-height: 100vh;
             }
 
@@ -107,7 +107,6 @@
 
                 .main-content {
                     margin-left: 0;
-                    padding: 20px;
                 }
             }
 
@@ -122,6 +121,14 @@
                 border-radius: 8px;
                 overflow: hidden;
             }
+
+            /* Topbar Styling */
+            .topbar {
+                background-color: #ffffff;
+                border-bottom: 1px solid #e2e8f0;
+                padding: 12px 24px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            }
     </style>
 </head>
 <body>
@@ -131,20 +138,6 @@
             <nav class="col-md-3 col-lg-2 sidebar p-0">
                 <div class="sidebar-brand text-center">
                     <i class="bi bi-cpu-fill text-primary me-2"></i>VanDinhCMS <span>Admin</span>
-                    <ul class="navbar-nav ms-auto">
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-white">
-                                    Chào, <strong>@User.FindFirst("FullName")?.Value</strong> (@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value)
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-outline-danger btn-sm" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
-                            </li>
-                        }
-                    </ul>
-
                 </div>
 
                 <div class="sidebar-menu">
@@ -152,9 +145,13 @@
                     <a asp-controller="Home" asp-action="Index">
                         <i class="bi bi-speedometer2"></i> Bảng điều khiển
                     </a>
-                    <a asp-controller="User" asp-action="Index">
-                        <i class="bi bi-shield-lock-fill"></i> Quản lý Thành viên
-                    </a>
+                    
+                    @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                    {
+                        <a asp-controller="User" asp-action="Index">
+                            <i class="bi bi-shield-lock-fill"></i> Quản lý Thành viên
+                        </a>
+                    }
 
                     <div class="sidebar-menu-label mt-3">Nội Dung</div>
                     <a asp-controller="Category" asp-action="Index">
@@ -165,7 +162,7 @@
                     </a>
 
                     <div class="sidebar-menu-label mt-3">Cửa Hàng</div>
-                    <a asp-controller="CategoryProduct" asp-action="Index">
+                    <a asp-controller="CategoryProducts" asp-action="Index">
                         <i class="bi bi-grid-3x3-gap-fill"></i> Danh mục sản phẩm
                     </a>
                     <a asp-controller="Product" asp-action="Index">
@@ -182,7 +179,38 @@
 
             <!-- Main Content Container -->
             <main class="col-md-9 col-lg-10 main-content">
-                @RenderBody()
+                <header class="topbar d-flex justify-content-between align-items-center">
+                    <div class="text-secondary breadcrumb m-0">
+                        <span>Hệ thống quản trị</span>
+                    </div>
+
+                    <ul class="navbar-nav flex-row gap-3 align-items-center m-0">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <span class="text-dark me-2">
+                                    Chào, <strong>@User.FindFirst("FullName")?.Value</strong>
+                                </span>
+                                <span class="badge bg-secondary">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                            </li>
+                            <li class="nav-item ms-3">
+                                <a class="btn btn-outline-danger btn-sm" asp-controller="Account" asp-action="Logout">
+                                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                            </li>
+                        }
+                    </ul>
+                </header>
+
+                <div class="p-4">
+                    @RenderBody()
+                </div>
             </main>
         </div>
     </div>
@@ -193,27 +221,27 @@
     <script>
         // Automatic Sidebar Active State Script
         document.addEventListener("DOMContentLoaded", function() {
-        const currentPath = window.location.pathname.toLowerCase();
-        const sidebarLinks = document.querySelectorAll(".sidebar a");
+            const currentPath = window.location.pathname.toLowerCase();
+            const sidebarLinks = document.querySelectorAll(".sidebar a");
 
-        sidebarLinks.forEach(link => {
-        const href = link.getAttribute("href");
-        if (href) {
-        const lowerHref = href.toLowerCase();
-        // Split paths to check controller equality
-        const pathSegments = currentPath.split('/').filter(x => x);
-        const hrefSegments = lowerHref.split('/').filter(x => x);
+            sidebarLinks.forEach(link => {
+                const href = link.getAttribute("href");
+                if (href) {
+                    const lowerHref = href.toLowerCase();
+                    // Split paths to check controller equality
+                    const pathSegments = currentPath.split('/').filter(x => x);
+                    const hrefSegments = lowerHref.split('/').filter(x => x);
 
-        if (pathSegments.length > 0 && hrefSegments.length > 0) {
-        // Check if controller matches (usually first segment)
-        if (pathSegments[0] === hrefSegments[0]) {
-        link.classList.add("active");
-        }
-        } else if (lowerHref === "/" && currentPath === "/") {
-        link.classList.add("active");
-        }
-        }
-        });
+                    if (pathSegments.length > 0 && hrefSegments.length > 0) {
+                        // Check if controller matches (usually first segment)
+                        if (pathSegments[0] === hrefSegments[0]) {
+                            link.classList.add("active");
+                        }
+                    } else if (lowerHref === "/" && currentPath === "/") {
+                        link.classList.add("active");
+                    }
+                }
+            });
         });
     </script>
     @await RenderSectionAsync("Scripts", required: false)

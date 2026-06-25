@@ -1,37 +1,60 @@
 import React from 'react';
-import CategoryProductList from './components/CategoryProductList';
-import ProductList from './components/ProductList';
-import PostList from './components/PostList';
-import './App.css';
+// Import các thành phần lõi của thư viện điều hướng đường dẫn
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// IMPORT CÁC TRANG CHỨC NĂNG (GIAO DIỆN CHÍNH)
+import Home from './pages/home/index';
+import Shop from './pages/shop/index';
+import ProductDetail from './pages/product-detail/index';
+import Blog from './pages/blog/index';
+import BlogDetail from './pages/blog-detail/index';
+import Cart from './pages/cart/index';
+import Checkout from './pages/checkout/index';
+import About from './pages/about/index';
 
 function App() {
-  return (
-    <div className="container mt-5">
-      <header className="pb-3 mb-4 border-bottom">
-        <span className="fs-4 font-weight-bold text-dark">
-          👗 FASHION BOUTIQUE - THỜI TRANG CÔNG SỞ & DẠ HỘI
-        </span>
-      </header>
-
-      {/* KHU VỰC 1: SHOPPING (Danh mục sản phẩm + Lưới sản phẩm) */}
-      <div className="row">
-        <div className="col-md-4">
-          <CategoryProductList />
-        </div>
-        <div className="col-md-8">
-          <h4 className="mb-4 text-uppercase text-secondary font-weight-bold">Bộ sưu tập mới nhất</h4>
-          <ProductList />
-        </div>
-      </div>
-
-      {/* KHU VỰC 2: BLOG (Tin tức thời trang) */}
-      <div className="row mt-5">
-        <div className="col-12">
-          <PostList />
-        </div>
-      </div>
-    </div>
-  );
+    return (
+        // Khởi tạo bộ định tuyến bao bọc toàn bộ ứng dụng Web
+        <Router>
+            <div className="d-flex flex-column min-vh-100 bg-light">
+                {/* KHU VỰC NỘI DUNG ĐỘNG (Thay đổi ruột tùy theo URL trên thanh địa chỉ) */}
+                <main className="flex-grow-1">
+                    <Routes>
+                        {/* Trang chủ */}
+                        <Route path="/" element={<Home />} />
+                        {/* Trang Cửa hàng */}
+                        <Route path="/shop" element={<Shop />} />
+                        {/* Trang Chi tiết sản phẩm - dùng tham số động ":id" */}
+                        <Route path="/product/:id" element={<ProductDetail />} />
+                        {/* Trang Danh sách tin tức */}
+                        <Route path="/blog" element={<Blog />} />
+                        {/* Trang Chi tiết bài viết */}
+                        <Route path="/blog/:id" element={<BlogDetail />} />
+                        {/* Trang Giỏ hàng cá nhân */}
+                        <Route path="/cart" element={<Cart />} />
+                        {/* Trang Điền thông tin thanh toán */}
+                        <Route path="/checkout" element={<Checkout />} />
+                        {/* Trang Về Chúng Tôi */}
+                        <Route path="/about" element={<About />} />
+                        {/* XỬ LÝ KỊCH BẢN TRANG LỖI 404 */}
+                        <Route path="*" element={
+                            <div className="container text-center py-5 my-5">
+                                <img
+                                    src="https://cdn-icons-png.flaticon.com/512/580/580185.png"
+                                    alt="404"
+                                    className="mb-4"
+                                    style={{ width: '100px', opacity: 0.6 }}
+                                />
+                                <h2 className="fw-bold text-secondary">404 - KHÔNG TÌM THẤY TRANG</h2>
+                                <p className="text-muted">Đường dẫn bạn truy cập không tồn tại trên hệ thống ThaiCMS.</p>
+                                <a href="/" className="btn btn-dark btn-sm mt-2">Quay lại Trang Chủ</a>
+                            </div>
+                        } />
+                    </Routes>
+                </main>
+            </div>
+        </Router>
+    );
 }
 
 export default App;
