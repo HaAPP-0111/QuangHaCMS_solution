@@ -1,0 +1,30 @@
+@{
+    Layout = "_LayoutAdmin";
+}
+@model IEnumerable<CMS.Data.Entities.Customer>
+
+<h2 class="text-primary">DANH SÁCH KHÁCH HÀNG</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Địa chỉ</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.FullName</td>
+                <td>@item.Email</td>
+                <td>@(item.Phone ?? "Chưa cập nhật")</td>
+                <td>@(item.Address ?? "Chưa cập nhật")</td>
+            </tr>
+        }
+    </tbody>
+</table>

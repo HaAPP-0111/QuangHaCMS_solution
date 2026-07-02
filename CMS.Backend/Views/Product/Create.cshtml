@@ -1,0 +1,54 @@
+@{
+    Layout = "_LayoutAdmin";
+}
+@model CMS.Data.Entities.Product
+
+<h2 class="text-primary">THÊM SẢN PHẨM MỚI</h2>
+<hr />
+
+<form asp-action="Create" method="post">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
+                <input asp-for="Name" class="form-control" placeholder="VD: Hạt Royal Canin Medium Adult 10kg" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mô tả sản phẩm</label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả chi tiết sản phẩm..."></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Giá bán (VNĐ) <span class="text-danger">*</span></label>
+                    <input asp-for="Price" class="form-control" type="number" placeholder="VD: 850000" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Số lượng tồn kho</label>
+                    <input asp-for="StockQuantity" class="form-control" type="number" placeholder="VD: 50" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Đường dẫn hình ảnh</label>
+                <input asp-for="ImageUrl" class="form-control" placeholder="VD: /images/products/ten-anh.jpg" />
+                <small class="text-muted">Nhập đường dẫn tương đối tới ảnh trong thư mục wwwroot</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Danh mục sản phẩm <span class="text-danger">*</span></label>
+                <select asp-for="CategoryProductId" asp-items="ViewBag.CategoryList" class="form-select">
+                    <option value="">-- Chọn danh mục --</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success px-4">
+                <i class="bi bi-check-circle"></i> Lưu sản phẩm
+            </button>
+            <a asp-action="Index" class="btn btn-secondary px-4 ms-2">Quay lại</a>
+        </div>
+    </div>
+</form>

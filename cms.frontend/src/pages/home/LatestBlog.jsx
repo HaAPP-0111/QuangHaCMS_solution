@@ -37,10 +37,10 @@ function LatestBlog() { // chỉ lấy 3 tin mới nhất
             <div className="container">
                 <div className="section-heading mb-4 text-center">
                     <h3 className="font-weight-bold text-uppercase" style={{ color: '#005088' }}>
-                        Xu Hướng Thời Trang
+                        Xu Hướng nuôi pet
                     </h3>
                     <p className="text-muted lead" style={{ fontSize: '15px' }}>
-                        Cập nhật những mẹo phối đồ và tin tức phong cách mới nhất cùng ThaiCMS
+                        Cập nhật những mẹo chăm sóc và tin tức về thú cưng mới nhất cùng QuangHa.Pet. Hãy khám phá những xu hướng nuôi thú cưng đang thịnh hành và tìm cảm hứng cho phong cách của bạn.
                     </p>
                     <div className="mx-auto" style={{ width: '60px', height: '3px', backgroundColor: '#11CAA0' }}></div>
                 </div>

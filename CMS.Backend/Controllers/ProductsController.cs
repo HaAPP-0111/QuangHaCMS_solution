@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
  * Version: 5.0 (Hoàn chỉnh hệ thống API lấy danh sách, lọc theo danh mục sản phẩm và xem chi tiết sản phẩm cho ReactJS)
@@ -30,27 +30,66 @@ namespace CMS.Backend.Controllers
         }
 
         // =========================================================================
-        // BƯỚC 1: API LẤY TOÀN BỘ SẢN PHẨM (GET: api/products)
+        // BƯỚC 1: API LẤY TOÀN BỘ SẢN PHẨM (GET: api/products) (CÓ LỌC)
         // =========================================================================
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? keyword = null,
+            [FromQuery] decimal? minPrice = null,
+            [FromQuery] decimal? maxPrice = null,
+            [FromQuery] int? categoryId = null,
+            int page = 1, 
+            int pageSize = 12)
         {
-            // Lấy toàn bộ dữ liệu từ bảng Products trong SQL Server
-            var products = await _context.Products
-                .OrderByDescending(p => p.Id) // Sắp xếp sản phẩm mới nhất lên đầu
-                .Select(p => new {            // "Gọt tỉa" dữ liệu: chỉ lấy những trường cần thiết ra trang chủ
+            // Bắt đầu với IQueryable để có thể nối tiếp các điều kiện lọc (chưa chạy DB ngay)
+            var baseQuery = _context.Products.AsQueryable();
+
+            if (categoryId.HasValue)
+            {
+                baseQuery = baseQuery.Where(p => p.CategoryProductId == categoryId.Value);
+            }
+
+            // Lọc theo tên (Tiêu chí 40)
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                baseQuery = baseQuery.Where(p => p.Name.Contains(keyword));
+            }
+
+            // Lọc theo khoảng giá (Tiêu chí 39)
+            if (minPrice.HasValue)
+            {
+                baseQuery = baseQuery.Where(p => p.Price >= minPrice.Value);
+            }
+            if (maxPrice.HasValue)
+            {
+                baseQuery = baseQuery.Where(p => p.Price <= maxPrice.Value);
+            }
+
+            var query = baseQuery
+                .OrderByDescending(p => p.Id)
+                .Select(p => new {
                     p.Id,
                     p.Name,
                     p.Price,
                     p.StockQuantity,
                     p.ImageUrl,
                     CategoryProductId = p.CategoryProductId,
-                    CategoryName = p.CategoryProduct != null ? p.CategoryProduct.Name : "Chưa phân loại" // Kéo trực tiếp tên danh mục sản phẩm
-                })
+                    CategoryName = p.CategoryProduct != null ? p.CategoryProduct.Name : "Chưa phân loại"
+                });
+
+            int totalItems = await query.CountAsync();
+            int totalPages = (int)System.Math.Ceiling(totalItems / (double)pageSize);
+
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            // Trả về kết quả cho Frontend kèm mã trạng thái HTTP 200 OK (Thành công)
-            return Ok(products);
+            return Ok(new {
+                Products = products,
+                TotalPages = totalPages,
+                CurrentPage = page
+            });
         }
 
         // =========================================================================
@@ -78,7 +117,7 @@ namespace CMS.Backend.Controllers
         // =========================================================================
         // BƯỚC 3: API LẤY CHI TIẾT MỘT SẢN PHẨM (GET: api/products/{id})
         // =========================================================================
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetDetail(int id)
         {
             // 3.1. Quét bảng Products để tìm sản phẩm đầu tiên có Id khớp với tham số
@@ -95,6 +134,42 @@ namespace CMS.Backend.Controllers
 
             // 3.3. Trả về toàn bộ đối tượng sản phẩm (bao gồm cả trường Description) kèm mã 200 OK
             return Ok(product);
+        }
+        // =========================================================================
+        // BƯỚC 4: API LẤY 3 SẢN PHẨM MỚI NHẤT (GET: api/products/latest) (Tiêu chí 36)
+        // =========================================================================
+        [HttpGet("latest")]
+        public async Task<IActionResult> GetLatest()
+        {
+            var products = await _context.Products
+                .OrderByDescending(p => p.Id)
+                .Take(3)
+                .Select(p => new {
+                    p.Id, p.Name, p.Price, p.StockQuantity, p.ImageUrl
+                })
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
+        // =========================================================================
+        // BƯỚC 5: API LẤY 3 SẢN PHẨM BÁN CHẠY (GET: api/products/bestselling) (Tiêu chí 37)
+        // =========================================================================
+        [HttpGet("bestselling")]
+        public async Task<IActionResult> GetBestSelling()
+        {
+            // Sắp xếp theo số lượng bán được trong bảng OrderDetails
+            var products = await _context.Products
+                .OrderByDescending(p => _context.OrderDetails
+                                        .Where(od => od.ProductId == p.Id)
+                                        .Sum(od => (int?)od.Quantity) ?? 0)
+                .Take(3)
+                .Select(p => new {
+                    p.Id, p.Name, p.Price, p.StockQuantity, p.ImageUrl
+                })
+                .ToListAsync();
+
+            return Ok(products);
         }
     }
 }

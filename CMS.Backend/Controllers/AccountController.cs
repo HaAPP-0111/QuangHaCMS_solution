@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
  * Version: 1.0 (Hoàn chỉnh chức năng Đăng nhập hệ thống & Đăng xuất bằng Cookie Authentication)
@@ -56,11 +56,33 @@ namespace CMS.Backend.Controllers
                     return View();
                 }
 
-                // 1. Kiểm tra tài khoản và mật khẩu trong Database thực tế
-                // (Sau này nếu mã hóa mật khẩu, bạn sẽ so sánh mã hash tại đây)
-                var user = _context.Users.FirstOrDefault(u => u.Username == username && u.PasswordHash == password);
+                // 1. Tìm tài khoản theo username trong DB
+                var user = _context.Users.FirstOrDefault(u => u.Username == username);
 
+                bool passwordOk = false;
                 if (user != null)
+                {
+                    // Kiểm tra mật khẩu: Hỗ trợ cả 2 trường hợp
+                    // TH1: Mật khẩu đã được mã hóa bằng BCrypt (bắt đầu bằng "$2")
+                    if (user.PasswordHash.StartsWith("$2"))
+                    {
+                        passwordOk = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+                    }
+                    else
+                    {
+                        // TH2: Mật khẩu vẫn đang là plain text (chưa mã hóa)
+                        passwordOk = (password == user.PasswordHash);
+
+                        // Tự động mã hóa lại bằng BCrypt để lần sau dùng chuẩn hơn
+                        if (passwordOk)
+                        {
+                            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+                            _context.SaveChanges();
+                        }
+                    }
+                }
+
+                if (passwordOk && user != null)
                 {
                     // 2. Thiết lập danh tính người dùng (Claims) để lưu vào Cookie
                     var claims = new List<Claim>

@@ -1,4 +1,4 @@
-﻿@model CMS.Data.Entities.Post
+@model CMS.Data.Entities.Post
 
 @{
     Layout = "_LayoutAdmin";
@@ -76,4 +76,47 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+
+    <script>
+        class MyUploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+            }
+            upload() {
+                return this.loader.file
+                    .then(file => new Promise((resolve, reject) => {
+                        const data = new FormData();
+                        data.append('upload', file);
+                        fetch('/api/upload/ckeditor', {
+                            method: 'POST',
+                            body: data
+                        }).then(response => response.json())
+                          .then(result => resolve({ default: result.url }))
+                          .catch(error => reject(error));
+                    }));
+            }
+            abort() {}
+        }
+        function MyCustomUploadAdapterPlugin(editor) {
+            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                return new MyUploadAdapter(loader);
+            };
+        }
+
+        ClassicEditor
+        .create(document.querySelector('#Content'), {
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+        })
+        .catch(error => {
+            console.error('Lỗi khởi tạo CKEditor:', error);
+        });
+    </script>
+
+    <style>
+        .ck-editor__editable_inline {
+            min-height: 300px;
+        }
+    </style>
 }

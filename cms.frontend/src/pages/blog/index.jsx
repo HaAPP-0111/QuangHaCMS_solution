@@ -9,16 +9,21 @@ function Blog() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeCategoryId, setActiveCategoryId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    // Tải lại bài viết mỗi khi đổi chuyên mục: null = tất cả, có giá trị = lọc theo category
+    // Tải lại bài viết mỗi khi đổi chuyên mục hoặc đổi trang
     useEffect(() => {
         const fetchPosts = async () => {
             try {
                 setLoading(true);
                 const data = activeCategoryId === null
-                    ? await postService.getAllPosts()
-                    : await postService.getPostsByCategory(activeCategoryId);
-                setPosts(data);
+                    ? await postService.getAllPosts(currentPage)
+                    : await postService.getPostsByCategory(activeCategoryId, currentPage);
+                
+                const postsData = data.Posts || data.posts || (Array.isArray(data) ? data : []);
+                setPosts(postsData);
+                setTotalPages(data.TotalPages || data.totalPages || 1);
             } catch (error) {
                 console.error("Lỗi khi tải danh sách bài viết:", error);
                 setPosts([]);
@@ -27,7 +32,19 @@ function Blog() {
             }
         };
         fetchPosts();
-    }, [activeCategoryId]);
+    }, [activeCategoryId, currentPage]);
+
+    const handleCategorySelect = (id) => {
+        setActiveCategoryId(id);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
 
     return (
         <div>
@@ -51,13 +68,42 @@ function Blog() {
                                 <p className="text-muted m-0">Không có bài viết nào trong chuyên mục này.</p>
                             </div>
                         ) : (
-                            <div className="row">
-                                {posts.map((post) => (
-                                    <div className="col-lg-4 col-md-6 col-12 mb-4" key={post.id}>
-                                        <PostCard post={post} />
+                            <>
+                                <div className="row">
+                                    {posts.map((post) => (
+                                        <div className="col-lg-4 col-md-6 col-12 mb-4" key={post.id}>
+                                            <PostCard post={post} />
+                                        </div>
+                                    ))}
+                                </div>
+                                
+                                {/* Phân trang */}
+                                {totalPages > 1 && (
+                                    <div className="d-flex justify-content-center mt-5">
+                                        <nav aria-label="Page navigation">
+                                            <ul className="pagination shadow-sm">
+                                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                                    <button className="page-link px-3" onClick={() => handlePageChange(currentPage - 1)}>
+                                                        <i className="fas fa-chevron-left"></i> Trước
+                                                    </button>
+                                                </li>
+                                                {[...Array(totalPages)].map((_, i) => (
+                                                    <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                                                        <button className="page-link px-3 fw-bold" onClick={() => handlePageChange(i + 1)}>
+                                                            {i + 1}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                                    <button className="page-link px-3" onClick={() => handlePageChange(currentPage + 1)}>
+                                                        Sau <i className="fas fa-chevron-right"></i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </nav>
                                     </div>
-                                ))}
-                            </div>
+                                )}
+                            </>
                         )}
                     </div>
 
@@ -65,7 +111,7 @@ function Blog() {
                     <div className="col-md-3">
                         <BlogSidebar
                             activeCategoryId={activeCategoryId}
-                            onSelectCategory={setActiveCategoryId}
+                            onSelectCategory={handleCategorySelect}
                         />
                     </div>
                 </div>

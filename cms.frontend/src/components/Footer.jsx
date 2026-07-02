@@ -9,7 +9,7 @@ function Footer() {
                     {/* Cột 1: Giới thiệu ngắn gọn về thương hiệu */}
                     <div className="col-md-4 mb-4 mb-md-0">
                         <h4 className="font-weight-bold mb-3" style={{ color: '#11CAA0', letterSpacing: '1px' }}>
-                            ThaiCMS<span className="text-white">.Fashion</span>
+                            Quangha<span className="text-white">.Pet</span>
                         </h4>
                         <p className="text-muted text-justify" style={{ fontSize: '14px', lineHeight: '1.6' }}>
                             Hệ thống thời trang cao cấp dẫn đầu xu hướng. Chúng tôi cam kết mang đến những sản phẩm premium chất lượng cao, định hình phong cách thời thượng cho bạn.
@@ -62,7 +62,7 @@ function Footer() {
             <div className="copyright-bar py-3 mt-4" style={{ backgroundColor: '#1a1a1a', borderTop: '1px solid #2d2d2d' }}>
                 <div className="container text-center">
                     <p className="m-0 text-muted" style={{ fontSize: '13px' }}>
-                        &copy; {new Date().getFullYear()} <strong style={{ color: '#11CAA0' }}>ThaiCMS Retail</strong>. All Rights Reserved.
+                        &copy; {new Date().getFullYear()} <strong style={{ color: '#11CAA0' }}>QuangHa Retail</strong>. All Rights Reserved.
                     </p>
                 </div>
             </div>

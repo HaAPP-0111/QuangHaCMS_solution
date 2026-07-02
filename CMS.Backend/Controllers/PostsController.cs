@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
  * Version: 5.0 (Hoàn chỉnh hệ thống API lấy danh sách, lọc theo danh mục và xem chi tiết bài viết cho ReactJS)
@@ -33,43 +33,62 @@ namespace CMS.Backend.Controllers
         // BƯỚC 1: API LẤY TOÀN BỘ BÀI VIẾT (GET: api/posts)
         // =========================================================================
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 12)
         {
-            // Lấy toàn bộ dữ liệu từ bảng Posts trong SQL Server
-            var posts = await _context.Posts
-                .OrderByDescending(p => p.Id) // Sắp xếp bài viết mới nhất lên đầu
-                .Select(p => new {            // "Gọt tỉa" dữ liệu: chỉ lấy những trường cần thiết ra trang chủ 
+            var query = _context.Posts
+                .OrderByDescending(p => p.Id)
+                .Select(p => new {
                     p.Id,
                     p.Title,
                     p.ImageUrl,
-                    p.CreatedDate,            // Sử dụng thuộc tính CreatedDate theo cấu trúc DB của bạn
-                    CategoryName = p.Category.Name // Kéo trực tiếp tên chuyên mục thay vì chỉ lấy mã ID cộc lốc 
-                })
+                    p.CreatedDate,
+                    CategoryName = p.Category.Name
+                });
+
+            int totalItems = await query.CountAsync();
+            int totalPages = (int)System.Math.Ceiling(totalItems / (double)pageSize);
+
+            var posts = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            // Trả về kết quả cho Frontend kèm mã trạng thái HTTP 200 OK (Thành công)
-            return Ok(posts);
+            return Ok(new {
+                Posts = posts,
+                TotalPages = totalPages,
+                CurrentPage = page
+            });
         }
 
         // =========================================================================
         // BƯỚC 2: API LẤY BÀI VIẾT THEO DANH MỤC (GET: api/posts/category/{categoryId})
         // =========================================================================
         [HttpGet("category/{categoryId}")]
-        public async Task<IActionResult> GetByCategory(int categoryId)
+        public async Task<IActionResult> GetByCategory(int categoryId, int page = 1, int pageSize = 12)
         {
-            // Lọc các bài viết có CategoryId trùng với ID truyền vào từ thanh URL
-            var posts = await _context.Posts
+            var query = _context.Posts
                 .Where(p => p.CategoryId == categoryId)
-                .OrderByDescending(p => p.Id) // Sắp xếp bài mới nhất thuộc danh mục lên đầu
+                .OrderByDescending(p => p.Id)
                 .Select(p => new {
                     p.Id,
                     p.Title,
                     p.ImageUrl,
                     p.CreatedDate
-                })
+                });
+
+            int totalItems = await query.CountAsync();
+            int totalPages = (int)System.Math.Ceiling(totalItems / (double)pageSize);
+
+            var posts = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return Ok(posts);
+            return Ok(new {
+                Posts = posts,
+                TotalPages = totalPages,
+                CurrentPage = page
+            });
         }
 
         // =========================================================================

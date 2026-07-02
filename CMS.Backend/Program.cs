@@ -9,14 +9,24 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:3001",  // React có thể chạy port 3001 nếu 3000 đã bị chiếm
+                "https://localhost:3000",
+                "https://localhost:3001"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        // Bỏ qua lỗi vòng lặp dữ liệu (Object Cycle) khi Include các bảng có liên kết 2 chiều
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // --- 2. DỊCH VỤ: Swagger ---
 builder.Services.AddEndpointsApiExplorer();
@@ -25,6 +35,9 @@ builder.Services.AddSwaggerGen();
 // --- 3. DỊCH VỤ: Database ---
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// --- 3.1 DỊCH VỤ: Email ---
+builder.Services.AddScoped<CMS.Backend.Services.IEmailService, CMS.Backend.Services.EmailService>();
 
 // --- 4. DỊCH VỤ: Authentication ---
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

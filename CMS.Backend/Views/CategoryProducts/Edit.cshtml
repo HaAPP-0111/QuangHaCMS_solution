@@ -1,0 +1,36 @@
+@{
+    Layout = "_LayoutAdmin";
+}
+@model CMS.Data.Entities.CategoryProduct
+
+<h2 class="text-primary">SỬA DANH MỤC SẢN PHẨM</h2>
+<hr />
+
+<form action="/CategoryProducts/Edit/@Model.Id" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tên danh mục <span class="text-danger">*</span></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mô tả</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Link Ảnh đại diện (ImageUrl)</label>
+                <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+            </div>
+
+            <button type="submit" class="btn btn-warning px-4">
+                <i class="bi bi-pencil-square"></i> Cập nhật
+            </button>
+            <a href="/CategoryProducts" class="btn btn-secondary px-4 ms-2">Quay lại</a>
+        </div>
+    </div>
+</form>
