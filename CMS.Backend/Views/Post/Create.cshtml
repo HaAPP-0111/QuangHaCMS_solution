@@ -1,4 +1,4 @@
-﻿@model CMS.Data.Entities.Post
+@model CMS.Data.Entities.Post
 
 @{
     Layout = "_LayoutAdmin";
@@ -74,12 +74,37 @@
 
     <script>
         // Kích hoạt trình soạn thảo thông minh đè lên thẻ textarea có Id là 'Content' (sinh ra tự động bởi asp-for="Content")
+        class MyUploadAdapter {
+            constructor(loader) {
+                this.loader = loader;
+            }
+            upload() {
+                return this.loader.file
+                    .then(file => new Promise((resolve, reject) => {
+                        const data = new FormData();
+                        data.append('upload', file);
+                        fetch('/api/upload/ckeditor', {
+                            method: 'POST',
+                            body: data
+                        }).then(response => response.json())
+                          .then(result => resolve({ default: result.url }))
+                          .catch(error => reject(error));
+                    }));
+            }
+            abort() {}
+        }
+        function MyCustomUploadAdapterPlugin(editor) {
+            editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+                return new MyUploadAdapter(loader);
+            };
+        }
+
         ClassicEditor
         .create(document.querySelector('#Content'), {
-        // Bạn có thể tùy biến thêm thanh công cụ (toolbar) ở đây nếu cần, mặc định sẽ tự nhận đủ công cụ cơ bản
+            extraPlugins: [MyCustomUploadAdapterPlugin],
         })
         .catch(error => {
-        console.error('Lỗi khởi tạo CKEditor:', error);
+            console.error('Lỗi khởi tạo CKEditor:', error);
         });
     </script>
 

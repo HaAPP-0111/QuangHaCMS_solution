@@ -12,6 +12,11 @@ import Cart from './pages/cart/index';
 import Checkout from './pages/checkout/index';
 import About from './pages/about/index';
 
+// Import Trang Xác thực
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+
 function App() {
     return (
         // Khởi tạo bộ định tuyến bao bọc toàn bộ ứng dụng Web
@@ -36,6 +41,10 @@ function App() {
                         <Route path="/checkout" element={<Checkout />} />
                         {/* Trang Về Chúng Tôi */}
                         <Route path="/about" element={<About />} />
+                        {/* Trang Xác thực */}
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
                         {/* XỬ LÝ KỊCH BẢN TRANG LỖI 404 */}
                         <Route path="*" element={
                             <div className="container text-center py-5 my-5">
@@ -46,7 +55,7 @@ function App() {
                                     style={{ width: '100px', opacity: 0.6 }}
                                 />
                                 <h2 className="fw-bold text-secondary">404 - KHÔNG TÌM THẤY TRANG</h2>
-                                <p className="text-muted">Đường dẫn bạn truy cập không tồn tại trên hệ thống ThaiCMS.</p>
+                                <p className="text-muted">Đường dẫn bạn truy cập không tồn tại trên hệ thống QuangHa.</p>
                                 <a href="/" className="btn btn-dark btn-sm mt-2">Quay lại Trang Chủ</a>
                             </div>
                         } />

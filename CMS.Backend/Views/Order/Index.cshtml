@@ -1,0 +1,59 @@
+@{
+    Layout = "_LayoutAdmin";
+}
+@model IEnumerable<CMS.Data.Entities.Order>
+
+<h2 class="text-primary">QUẢN LÝ ĐƠN HÀNG</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã ĐH</th>
+            <th>Ngày đặt</th>
+            <th>Khách hàng</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+            <th>Số SP</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="fw-bold">#@item.Id</td>
+                <td>@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    @(item.Customer != null ? item.Customer.FullName : "Khách ẩn danh")
+                </td>
+                <td>
+                    @if (item.Status == 0)
+                    {
+                        <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                    }
+                    else if (item.Status == 1)
+                    {
+                        <span class="badge bg-info text-dark">Đang giao</span>
+                    }
+                    else if (item.Status == 2)
+                    {
+                        <span class="badge bg-success">Đã xong</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Không xác định</span>
+                    }
+                </td>
+                <td>@item.Notes</td>
+                <td>
+                    @(item.OrderDetails != null ? item.OrderDetails.Sum(od => od.Quantity) : 0) SP
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye"></i> Chi tiết
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

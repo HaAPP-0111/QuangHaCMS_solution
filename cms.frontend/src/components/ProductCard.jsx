@@ -62,9 +62,42 @@ function ProductCard({ item }) {
                     <button
                         className="btn btn-sm text-white font-weight-bold px-3 ml-2"
                         style={{ borderRadius: '20px', backgroundColor: '#11CAA0', borderColor: '#11CAA0', flexGrow: 1 }}
-                        onClick={() => alert(`Đã thêm mẫu [${item.name}] vào giỏ hàng!`)}
+                        onClick={() => {
+                            if (item.stockQuantity <= 0) {
+                                alert(`Rất tiếc! Mẫu [${item.name}] hiện đã hết hàng.`);
+                                return;
+                            }
+                            
+                            const storedCart = localStorage.getItem('cartItems');
+                            let cart = storedCart ? JSON.parse(storedCart) : [];
+                            
+                            const existingItemIndex = cart.findIndex(c => c.id === item.id);
+                            const currentQty = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
+                            
+                            if (currentQty + 1 > item.stockQuantity) {
+                                alert(`Lỗi: Số lượng trong kho không đủ! Chỉ còn ${item.stockQuantity} sản phẩm.`);
+                                return;
+                            }
+                            
+                            if (existingItemIndex >= 0) {
+                                cart[existingItemIndex].quantity += 1;
+                            } else {
+                                cart.push({
+                                    id: item.id,
+                                    name: item.name,
+                                    price: item.price,
+                                    imageUrl: item.imageUrl,
+                                    quantity: 1
+                                });
+                            }
+                            
+                            localStorage.setItem('cartItems', JSON.stringify(cart));
+                            window.dispatchEvent(new Event('cartUpdated'));
+                            alert(`Đã thêm [${item.name}] vào giỏ hàng!`);
+                        }}
+                        disabled={item.stockQuantity <= 0}
                     >
-                        <i className="fas fa-cart-plus mr-1"></i> Mua ngay
+                        <i className="fas fa-cart-plus mr-1"></i> {item.stockQuantity > 0 ? "Mua ngay" : "Hết hàng"}
                     </button>
                 </div>
             </div>

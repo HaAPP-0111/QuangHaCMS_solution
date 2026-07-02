@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import productService from '../../services/productService';
@@ -8,44 +9,75 @@ import ProductList from './ProductList';
 import LoadingOrEmpty from './LoadingOrEmpty';
 
 function Shop() {
-    // Mảng GỐC chứa toàn bộ sản phẩm lấy từ API (chưa lọc)
-    const [allProducts, setAllProducts] = useState([]);
+    const location = useLocation();
+    
+    // Mảng chứa sản phẩm đã được lọc trực tiếp từ API
+    const [filteredProducts, setFilteredProducts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Các State điều khiển bộ lọc - quản lý tập trung tại đây để Sidebar và Header cùng dùng
+    // Lấy keyword từ URL (Header đẩy sang)
+    const urlParams = new URLSearchParams(location.search);
+    const keywordFromUrl = urlParams.get('keyword') || '';
+
+    // Các State điều khiển bộ lọc cục bộ
     const [activeCategoryId, setActiveCategoryId] = useState(null);
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
-    const [keyword, setKeyword] = useState('');
+    const [keyword, setKeyword] = useState(keywordFromUrl);
+    
+    // State phân trang
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    // 1. Gọi API lấy toàn bộ sản phẩm 1 lần duy nhất khi vào trang
+    // Đồng bộ state keyword khi URL thay đổi
     useEffect(() => {
-        const fetchProducts = async () => {
+        setKeyword(keywordFromUrl);
+        setCurrentPage(1); // Reset về trang 1 khi search mới
+    }, [keywordFromUrl]);
+
+    // Gọi API mỗi khi các bộ lọc hoặc trang thay đổi
+    useEffect(() => {
+        const fetchFilteredProducts = async () => {
             try {
                 setLoading(true);
-                const data = await productService.getAllProducts();
-                setAllProducts(data);
+                const filters = {
+                    keyword: keyword,
+                    categoryId: activeCategoryId,
+                    minPrice: minPrice !== '' ? minPrice : null,
+                    maxPrice: maxPrice !== '' ? maxPrice : null,
+                    page: currentPage
+                };
+                const data = await productService.getAllProducts(filters);
+                
+                // Cập nhật state
+                const prods = data.products || data.Products || (Array.isArray(data) ? data : []);
+                setFilteredProducts(prods);
+                setTotalPages(data.totalPages || data.TotalPages || 1);
             } catch (error) {
                 console.error("Lỗi khi tải danh sách sản phẩm cho trang Shop:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchProducts();
-    }, []);
-
-    // 2. Áp dụng bộ lọc (danh mục + khoảng giá + từ khóa) ngay trên mảng đã có, không cần gọi lại API
-    const filteredProducts = allProducts.filter((p) => {
-        const matchCategory = activeCategoryId === null || p.categoryProductId === activeCategoryId;
-        const matchMin = minPrice === '' || p.price >= Number(minPrice);
-        const matchMax = maxPrice === '' || p.price <= Number(maxPrice);
-        const matchKeyword = keyword.trim() === '' || p.name.toLowerCase().includes(keyword.trim().toLowerCase());
-        return matchCategory && matchMin && matchMax && matchKeyword;
-    });
+        fetchFilteredProducts();
+    }, [keyword, activeCategoryId, minPrice, maxPrice, currentPage]);
 
     const handleChangePriceRange = (min, max) => {
         setMinPrice(min);
         setMaxPrice(max);
+        setCurrentPage(1); // Reset trang
+    };
+    
+    const handleCategorySelect = (id) => {
+        setActiveCategoryId(id);
+        setCurrentPage(1); // Reset trang
+    }
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     return (
@@ -58,7 +90,7 @@ function Shop() {
                     <div className="col-md-3 mb-4">
                         <ShopSidebar
                             activeCategoryId={activeCategoryId}
-                            onSelectCategory={setActiveCategoryId}
+                            onSelectCategory={handleCategorySelect}
                             minPrice={minPrice}
                             maxPrice={maxPrice}
                             onChangePriceRange={handleChangePriceRange}
@@ -69,7 +101,7 @@ function Shop() {
                     <div className="col-md-9">
                         <ShopHeader
                             keyword={keyword}
-                            onChangeKeyword={setKeyword}
+                            onChangeKeyword={(k) => { setKeyword(k); setCurrentPage(1); }}
                             totalCount={filteredProducts.length}
                         />
 
@@ -81,7 +113,36 @@ function Shop() {
                         />
 
                         {!loading && filteredProducts.length > 0 && (
-                            <ProductList products={filteredProducts} />
+                            <>
+                                <ProductList products={filteredProducts} />
+                                
+                                {/* Phân trang (Pagination) */}
+                                {totalPages > 1 && (
+                                    <div className="d-flex justify-content-center mt-5">
+                                        <nav aria-label="Page navigation">
+                                            <ul className="pagination shadow-sm">
+                                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                                    <button className="page-link px-3" onClick={() => handlePageChange(currentPage - 1)}>
+                                                        <i className="fas fa-chevron-left"></i> Trước
+                                                    </button>
+                                                </li>
+                                                {[...Array(totalPages)].map((_, i) => (
+                                                    <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+                                                        <button className="page-link px-3 fw-bold" onClick={() => handlePageChange(i + 1)}>
+                                                            {i + 1}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                                    <button className="page-link px-3" onClick={() => handlePageChange(currentPage + 1)}>
+                                                        Sau <i className="fas fa-chevron-right"></i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

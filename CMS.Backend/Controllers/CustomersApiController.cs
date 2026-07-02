@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
  * Version: 5.0 (Hoàn chỉnh hệ thống API lấy danh sách, thêm, sửa, xóa thông tin khách hàng cho Swagger và ReactJS)
@@ -97,6 +97,11 @@ namespace CMS.Backend.Controllers
                     return BadRequest(new { message = "Email này đã được đăng ký trong hệ thống!" });
                 }
 
+                if (!string.IsNullOrEmpty(model.Password))
+                {
+                    model.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                }
+                
                 _context.Customers.Add(model);
                 await _context.SaveChangesAsync();
 
@@ -179,6 +184,107 @@ namespace CMS.Backend.Controllers
                 // Nếu khách hàng đã từng đặt đơn hàng (Orders), SQL Server sẽ chặn lại không cho xóa
                 return StatusCode(500, new { message = "Không thể xóa khách hàng này do đã có dữ liệu đơn hàng! Lỗi: " + ex.Message });
             }
+        } // ĐÓNG HÀM DELETE Ở ĐÂY
+
+        // =========================================================================
+        // 6. API: ĐĂNG NHẬP KHÁCH HÀNG (POST: api/customersapi/login)
+        // =========================================================================
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        {
+            if (string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
+            {
+                return BadRequest(new { message = "Vui lòng nhập đầy đủ Email và Mật khẩu!" });
+            }
+
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == model.Email);
+            if (customer == null)
+            {
+                return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác!" });
+            }
+
+            // Kiểm tra mật khẩu (BCrypt)
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(model.Password, customer.Password);
+            
+            // Fallback: Kiểm tra cả mật khẩu thô (nếu database cũ chưa mã hóa)
+            if (!isPasswordValid && model.Password == customer.Password)
+            {
+                isPasswordValid = true;
+            }
+
+            if (!isPasswordValid)
+            {
+                return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác!" });
+            }
+
+            // Đăng nhập thành công, trả về thông tin user (không bao gồm password)
+            return Ok(new
+            {
+                message = "Đăng nhập thành công!",
+                user = new {
+                    id = customer.Id,
+                    fullName = customer.FullName,
+                    email = customer.Email,
+                    phone = customer.Phone,
+                    address = customer.Address
+                }
+            });
         }
+        // =========================================================================
+        // 7. API: YÊU CẦU QUÊN MẬT KHẨU (POST: api/customersapi/forgot-password)
+        // =========================================================================
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == model.Email);
+            if (customer == null)
+            {
+                // Để bảo mật, không trả về lỗi "Không tìm thấy email" để tránh kẻ gian dò quét email
+                return Ok(new { message = "Nếu email hợp lệ, hướng dẫn khôi phục mật khẩu đã được gửi (Giả lập)." });
+            }
+
+            // Ở môi trường thực tế: Tạo Token -> Gửi link vào email. 
+            // Ở đồ án này: Ta trả về mã thành công để Frontend làm giao diện Reset trực tiếp
+            return Ok(new { message = "Email hợp lệ. Cho phép đặt lại mật khẩu!" });
+        }
+
+        // =========================================================================
+        // 8. API: ĐẶT LẠI MẬT KHẨU MỚI (POST: api/customersapi/reset-password)
+        // =========================================================================
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == model.Email);
+            if (customer == null)
+            {
+                return BadRequest(new { message = "Email không hợp lệ!" });
+            }
+
+            // Mã hóa mật khẩu mới và lưu vào DB
+            customer.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            _context.Customers.Update(customer);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay." });
+        }
+    }
+
+    // DTO cho chức năng Đăng nhập
+    public class LoginDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    // DTO cho chức năng Quên mật khẩu
+    public class ForgotPasswordDto
+    {
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class ResetPasswordDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

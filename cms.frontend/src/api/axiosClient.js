@@ -1,9 +1,9 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 // Khởi tạo một thực thể axios với cấu hình base chung
 const axiosClient = axios.create({
-    // Đã cập nhật cổng 7083 khớp với launchSettings.json của bạn
-    baseURL: 'https://localhost:7083/api',
+    // Sử dụng biến môi trường từ file .env
+    baseURL: process.env.REACT_APP_API_URL || 'https://localhost:7083/api',
     headers: {
         'Content-Type': 'application/json',
     },

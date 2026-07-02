@@ -3,17 +3,48 @@ import axiosClient from '../api/axiosClient';
 
 const productService = {
     /**
-     * 1. Lấy danh sách toàn bộ sản phẩm thời trang
-     * API Endpoint: GET /api/Products
+     * 1. Lấy danh sách sản phẩm (Hỗ trợ lọc theo từ khóa và giá)
+     * API Endpoint: GET /api/Products?keyword=...&minPrice=...&maxPrice=...
      */
-    getAllProducts: async () => {
+    getAllProducts: async (filters = {}) => {
         try {
-            const response = await axiosClient.get('/Products');
-            // axiosClient đã tự bóc response.data qua interceptor, nên fallback response cũng đúng
-            return response.data || response;
+            // Chuyển đổi object filters thành chuỗi query parameters
+            const queryParams = new URLSearchParams();
+            if (filters.keyword) queryParams.append('keyword', filters.keyword);
+            if (filters.minPrice) queryParams.append('minPrice', filters.minPrice);
+            if (filters.maxPrice) queryParams.append('maxPrice', filters.maxPrice);
+            if (filters.categoryId) queryParams.append('categoryId', filters.categoryId);
+            if (filters.page) queryParams.append('page', filters.page);
+
+            const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+            const response = await axiosClient.get(`/products${queryString}`);
+            
+            // API trả về { Products: [...], TotalPages, CurrentPage }
+            const raw = response.data || response;
+            return raw;
         } catch (error) {
             console.error("Lỗi API getAllProducts:", error);
-            throw error;
+            return { products: [], totalPages: 1, currentPage: 1 };
+        }
+    },
+
+    getLatestProducts: async () => {
+        try {
+            const response = await axiosClient.get('/products/latest');
+            return response.data || response;
+        } catch (error) {
+            console.error("Lỗi API getLatestProducts:", error);
+            return [];
+        }
+    },
+
+    getBestSellingProducts: async () => {
+        try {
+            const response = await axiosClient.get('/products/bestselling');
+            return response.data || response;
+        } catch (error) {
+            console.error("Lỗi API getBestSellingProducts:", error);
+            return [];
         }
     },
 
@@ -23,7 +54,7 @@ const productService = {
      */
     getProductById: async (id) => {
         try {
-            const response = await axiosClient.get(`/Products/${id}`);
+            const response = await axiosClient.get(`/products/${id}`);
             return response.data || response;
         } catch (error) {
             console.error(`Lỗi API getProductById với ID ${id}:`, error);

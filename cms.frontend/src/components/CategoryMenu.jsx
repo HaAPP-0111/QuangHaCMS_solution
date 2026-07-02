@@ -48,41 +48,51 @@ function CategoryMenu() {
             <div className="container">
                 <div className="card shadow-sm border-0" style={{ borderRadius: '15px', overflow: 'hidden' }}>
                     <div className="card-body p-2 bg-white">
-                        <ul className="nav nav-pills nav-fill flex-column flex-sm-row">
-                            {/* Nút mặc định: Xem tất cả sản phẩm */}
-                            <li className="nav-item m-1">
-                                <button
-                                    className={`nav-link w-100 font-weight-bold border-0 text-uppercase py-3 ${activeCategoryId === null ? 'active' : 'text-secondary bg-transparent'}`}
+                        <div className="d-flex flex-wrap justify-content-center">
+                            {/* Khối mặc định: Xem tất cả sản phẩm */}
+                            <div className="m-2 text-center" style={{ width: '120px', cursor: 'pointer' }} onClick={() => handleCategoryClick(null)}>
+                                <div
+                                    className={`d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm`}
                                     style={{
-                                        borderRadius: '10px',
-                                        fontSize: '14px',
-                                        backgroundColor: activeCategoryId === null ? '#005088' : 'transparent',
-                                        transition: '0.3s'
+                                        width: '80px', height: '80px', borderRadius: '50%',
+                                        backgroundColor: activeCategoryId === null ? '#005088' : '#f8f9fa',
+                                        color: activeCategoryId === null ? '#fff' : '#6c757d',
+                                        transition: '0.3s',
+                                        border: activeCategoryId === null ? '3px solid #005088' : '1px solid #dee2e6'
                                     }}
-                                    onClick={() => handleCategoryClick(null)}
                                 >
-                                    <i className="fas fa-th-large mr-2"></i> Tất cả sản phẩm
-                                </button>
-                            </li>
-                            {/* VÒNG LẶP ĐỘNG: Duyệt mảng categories từ API Backend sinh ra các nút menu */}
+                                    <i className="fas fa-th-large fa-2x"></i>
+                                </div>
+                                <span className={`font-weight-bold ${activeCategoryId === null ? 'text-primary' : 'text-secondary'}`} style={{ fontSize: '14px' }}>
+                                    Tất cả
+                                </span>
+                            </div>
+
+                            {/* VÒNG LẶP ĐỘNG: Sinh ra các khối chứa ảnh */}
                             {categories.map((cat) => (
-                                <li className="nav-item m-1" key={cat.id}>
-                                    <button
-                                        className={`nav-link w-100 font-weight-bold border-0 text-uppercase py-3 ${activeCategoryId === cat.id ? 'active' : 'text-secondary bg-transparent'}`}
+                                <div className="m-2 text-center" style={{ width: '120px', cursor: 'pointer' }} key={cat.id} onClick={() => handleCategoryClick(cat.id)}>
+                                    <div
+                                        className={`mx-auto mb-2 shadow-sm d-flex align-items-center justify-content-center`}
                                         style={{
-                                            borderRadius: '10px',
-                                            fontSize: '14px',
-                                            backgroundColor: activeCategoryId === cat.id ? '#11CAA0' : 'transparent',
-                                            color: activeCategoryId === cat.id ? '#fff' : '#6c757d',
-                                            transition: '0.3s'
+                                            width: '80px', height: '80px', borderRadius: '50%',
+                                            backgroundColor: '#f8f9fa',
+                                            transition: '0.3s',
+                                            border: activeCategoryId === cat.id ? '3px solid #11CAA0' : '1px solid #dee2e6',
+                                            overflow: 'hidden'
                                         }}
-                                        onClick={() => handleCategoryClick(cat.id)}
                                     >
+                                        {cat.imageUrl ? (
+                                            <img src={cat.imageUrl} alt={cat.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <i className={`fas fa-paw fa-2x ${activeCategoryId === cat.id ? 'text-success' : 'text-secondary'}`}></i>
+                                        )}
+                                    </div>
+                                    <span className={`font-weight-bold ${activeCategoryId === cat.id ? 'text-success' : 'text-secondary'}`} style={{ fontSize: '14px' }}>
                                         {cat.name}
-                                    </button>
-                                </li>
+                                    </span>
+                                </div>
                             ))}
-                        </ul>
+                        </div>
                     </div>
                 </div>
             </div>

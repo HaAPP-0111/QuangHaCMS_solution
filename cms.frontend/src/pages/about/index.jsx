@@ -11,12 +11,12 @@ function About() {
                 <div className="row justify-content-center">
                     <div className="col-md-8 text-center">
                         <h2 className="font-weight-bold text-uppercase mb-3" style={{ color: '#005088' }}>
-                            Về ThaiCMS.Fashion
+                            Về QuangHa.Pet
                         </h2>
                         <div className="mx-auto mb-4" style={{ width: '60px', height: '3px', backgroundColor: '#11CAA0' }}></div>
 
                         <p className="text-secondary" style={{ fontSize: '16px', lineHeight: '1.8' }}>
-                            ThaiCMS.Fashion là hệ thống bán hàng thời trang trực tuyến chuyên về trang phục
+                           QuangHa.Pet là hệ thống bán hàng thời trang trực tuyến chuyên về trang phục
                             công sở và dạ hội, được phát triển trong khuôn khổ đồ án Chuyên đề ASP.NET Core kết hợp ReactJS.
                         </p>
                         <p className="text-secondary" style={{ fontSize: '16px', lineHeight: '1.8' }}>

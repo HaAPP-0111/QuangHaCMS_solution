@@ -1,22 +1,47 @@
 import React from 'react';
 // Import thành phần Link để chuyển trang mượt mà không bị tải lại trang (Hard-Reload)
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 function Header() {
     // Dùng hook useLocation của react-router-dom để bắt đường dẫn URL hiện tại
     const location = useLocation();
+    const navigate = useNavigate();
+    const [cartCount, setCartCount] = React.useState(0);
+    const [keyword, setKeyword] = React.useState('');
 
-    // Hàm xử lý giả lập khi bấm Tìm kiếm nhanh
+    // Lắng nghe thay đổi của giỏ hàng để cập nhật badge số lượng
+    React.useEffect(() => {
+        const updateCartCount = () => {
+            const storedCart = localStorage.getItem('cartItems');
+            if (storedCart) {
+                const cart = JSON.parse(storedCart);
+                const count = cart.reduce((total, item) => total + item.quantity, 0);
+                setCartCount(count);
+            } else {
+                setCartCount(0);
+            }
+        };
+
+        // Chạy lần đầu
+        updateCartCount();
+
+        // Lắng nghe event custom từ ProductDetail và Cart
+        window.addEventListener('cartUpdated', updateCartCount);
+        return () => window.removeEventListener('cartUpdated', updateCartCount);
+    }, []);
+
+    // Hàm xử lý tìm kiếm
     const handleSearchSubmit = (e) => {
         e.preventDefault();
-        alert("Chức năng tìm kiếm nhanh trên Header sẽ kết nối API Search ở các buổi sau!");
+        if (keyword.trim()) {
+            navigate(`/shop?keyword=${encodeURIComponent(keyword.trim())}`);
+        }
     };
 
     // Hàm hỗ trợ kiểm tra trang hiện tại để gán hiệu ứng làm sáng (Active) menu chuẩn v4
     const isActive = (path) => {
         return location.pathname === path ? 'active font-weight-bold text-primary' : 'text-dark';
     };
-
     return (
         <header className="main-header-wrapper bg-white shadow-sm sticky-top">
             {/* TẦNG TIỆN ÍCH 1: THANH TOP BAR */}
@@ -31,12 +56,31 @@ function Header() {
                         </span>
                     </div>
                     <div className="top-bar-right">
-                        <Link to="/login" className="text-white mr-3 text-decoration-none">
-                            <i className="fas fa-user mr-1"></i> Đăng nhập
-                        </Link>
-                        <Link to="/register" className="text-white text-decoration-none">
-                            <i className="fas fa-user-plus mr-1"></i> Đăng ký
-                        </Link>
+                        {localStorage.getItem('user') ? (
+                            <>
+                                <span className="text-white mr-3">
+                                    <i className="fas fa-user-circle mr-1"></i> Xin chào, <b>{JSON.parse(localStorage.getItem('user')).fullName}</b>!
+                                </span>
+                                <button 
+                                    className="btn btn-link text-white text-decoration-none p-0"
+                                    onClick={() => {
+                                        localStorage.removeItem('user');
+                                        window.location.reload();
+                                    }}
+                                >
+                                    <i className="fas fa-sign-out-alt mr-1"></i> Đăng xuất
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Link to="/login" className="text-white mr-3 text-decoration-none">
+                                    <i className="fas fa-user mr-1"></i> Đăng nhập
+                                </Link>
+                                <Link to="/register" className="text-white text-decoration-none">
+                                    <i className="fas fa-user-plus mr-1"></i> Đăng ký
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -48,7 +92,7 @@ function Header() {
                         <div className="col-md-3 col-6">
                             <Link to="/" className="text-decoration-none">
                                 <h3 className="font-weight-bold m-0" style={{ color: '#005088', letterSpacing: '1px' }}>
-                                    ThaiCMS<span style={{ color: '#11CAA0' }}>.Fashion</span>
+                                    QuangHa<span style={{ color: '#11CAA0' }}>.Pet</span>
                                 </h3>
                             </Link>
                         </div>
@@ -59,6 +103,8 @@ function Header() {
                                     className="form-control border-right-0"
                                     placeholder="Tìm kiếm mẫu đầm dạ hội, sơ mi công sở..."
                                     style={{ borderRadius: '20px 0 0 20px', fontSize: '14px' }}
+                                    value={keyword}
+                                    onChange={(e) => setKeyword(e.target.value)}
                                 />
                                 <div className="input-group-append">
                                     <button
@@ -89,7 +135,7 @@ function Header() {
                                         padding: '4px 6px'
                                     }}
                                 >
-                                    0
+                                    {cartCount}
                                 </span>
                             </Link>
                         </div>

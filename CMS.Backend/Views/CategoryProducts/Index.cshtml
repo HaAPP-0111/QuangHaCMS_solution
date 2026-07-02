@@ -1,0 +1,52 @@
+@{
+    Layout = "_LayoutAdmin";
+}
+@model IEnumerable<CMS.Data.Entities.CategoryProduct>
+
+<h2 class="text-primary">DANH MỤC SẢN PHẨM THÚ CƯNG</h2>
+<a href="/CategoryProducts/Create" class="btn btn-success mb-3">
+    <i class="bi bi-plus-circle"></i> Thêm danh mục mới
+</a>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Ảnh</th>
+            <th>Tên danh mục</th>
+            <th>Mô tả</th>
+            <th style="width:150px">Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" style="width:50px;height:50px;object-fit:cover;border-radius:5px;" alt="Ảnh" />
+                    }
+                </td>
+                <td>@item.Name</td>
+                <td>@item.Description</td>
+                <td>
+                    <a href="/CategoryProducts/Edit/@item.Id"
+                       class="btn btn-sm btn-outline-warning">Sửa</a>
+
+                    <form action="/CategoryProducts/Delete/@item.Id" method="post" style="display:inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này?')">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

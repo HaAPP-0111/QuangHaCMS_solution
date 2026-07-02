@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Sinh Viên: Đinh Quang Hà
  * MSSV: 2123110066
  * Version: 3.0 (Hoàn chỉnh toàn diện CRUD và tích hợp bộ lọc phân quyền bảo mật cấp cao)
@@ -63,7 +63,11 @@ namespace CMS.Backend.Controllers
                     return View(model);
                 }
 
-                // Lưu User mới vào Database
+                // Lưu User mới vào Database (Mã hóa mật khẩu)
+                if(!string.IsNullOrEmpty(model.PasswordHash))
+                {
+                    model.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.PasswordHash);
+                }
                 _context.Users.Add(model);
                 _context.SaveChanges();
 
@@ -111,7 +115,7 @@ namespace CMS.Backend.Controllers
                 // 2. Xử lý logic mật khẩu: Nếu người dùng nhập mới thì lấy cái mới, nếu để trống thì giữ nguyên mật khẩu cũ
                 if (!string.IsNullOrEmpty(NewPassword))
                 {
-                    model.PasswordHash = NewPassword; // Sau này bạn có thể chèn hàm mã hóa tại đây
+                    model.PasswordHash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
                 }
                 else
                 {

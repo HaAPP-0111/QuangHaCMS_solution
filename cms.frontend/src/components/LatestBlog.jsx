@@ -40,7 +40,7 @@ function LatestBlog() { // chỉ lấy 3 tin mới nhất
                         Xu Hướng Thời Trang
                     </h3>
                     <p className="text-muted lead" style={{ fontSize: '15px' }}>
-                        Cập nhật những mẹo phối đồ và tin tức phong cách mới nhất cùng ThaiCMS
+                        Cập nhật những mẹo phối đồ và tin tức phong cách mới nhất cùng QuangHa.Pet. Hãy khám phá những xu hướng thời trang đang thịnh hành và tìm cảm hứng cho phong cách của bạn.
                     </p>
                     <div className="mx-auto" style={{ width: '60px', height: '3px', backgroundColor: '#11CAA0' }}></div>
                 </div>

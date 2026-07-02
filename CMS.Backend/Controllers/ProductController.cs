@@ -1,31 +1,79 @@
-﻿/*
- * Sinh Viên: Đinh Quang Hà
- * MSSV: 2123110066
- * BÀI TẬP 4: LIỆT KÊ DANH SÁCH PRODUCTS
- */
 using Microsoft.AspNetCore.Mvc;
-using CMS.Data.Entities; // Namespace chứa thực thể Product của bạn
-using CMS.Data;          // Namespace chứa ApplicationDbContext
+using CMS.Data.Entities;
+using CMS.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CMS.Backend.Controllers
 {
+    [Authorize]
     public class ProductController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        // Constructor Injection để tiêm kết nối Database
         public ProductController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // Action lấy danh sách sản phẩm từ SQL Server đưa sang View
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // Lấy toàn bộ sản phẩm thực tế từ bảng Products
-            var products = _context.Products.ToList();
-
+            var products = await _context.Products.Include(p => p.CategoryProduct).ToListAsync();
             return View(products);
+        }
+
+        public IActionResult Create()
+        {
+            ViewBag.CategoryList = new SelectList(_context.CategoriesProducts.ToList(), "Id", "Name");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Product model)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Products.Add(model);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewBag.CategoryList = new SelectList(_context.CategoriesProducts.ToList(), "Id", "Name");
+            return View(model);
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return NotFound();
+            ViewBag.CategoryList = new SelectList(_context.CategoriesProducts.ToList(), "Id", "Name");
+            return View(product);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(Product model)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Update(model);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewBag.CategoryList = new SelectList(_context.CategoriesProducts.ToList(), "Id", "Name");
+            return View(model);
+        }
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product != null)
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }
